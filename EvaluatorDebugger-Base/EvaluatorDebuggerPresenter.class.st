@@ -8,7 +8,8 @@ Class {
 		'code',
 		'inspector',
 		'valueLabel',
-		'evaluatorDebugger'
+		'evaluatorDebugger',
+		'expressionListPresenter'
 	],
 	#category : #'EvaluatorDebugger-Base'
 }
@@ -21,6 +22,7 @@ EvaluatorDebuggerPresenter class >> defaultSpec [
 		add: 'Expression Value' expand: false fill: false padding: 5;
 		add: #valueLabel expand: false fill: false padding: 5;
 		add: #inspector;
+		add: #expressionListPresenter; 
 		yourself
 ]
 
@@ -61,7 +63,10 @@ EvaluatorDebuggerPresenter >> initializePresenters [
 	valueLabel label: 'Write an expression first'.
 	inspector := nil inspectionRaw.
 	inspector owner: self.
-
+	expressionListPresenter := ExpressionListPresenter new. 
+	expressionListPresenter listExpressions evaluationContext: self currentStDebuggerContext. 
+	expressionListPresenter owner: self. 
+	
 	"when changing the selected context in the stDebugger stackTable, re-evaluate the expression in that context"
 	evaluatorDebugger stDebugger stackTable selection whenChangedDo: [ 
 		self updatePresenter ].
@@ -96,6 +101,15 @@ EvaluatorDebuggerPresenter >> updateCode [
 	code interactionModel context: self currentStDebuggerContext
 ]
 
+{ #category : #'as yet unclassified' }
+EvaluatorDebuggerPresenter >> updateExpressionListContext [
+
+	expressionListPresenter listExpressions evaluationContext: self currentStDebuggerContext. 
+	expressionListPresenter listExpressions expressionList do:[ :e| e autoEvaluate ifTrue:[ expressionListPresenter listExpressions evaluateExpression:e] ]. 
+	expressionListPresenter updateView. 
+
+]
+
 { #category : #updating }
 EvaluatorDebuggerPresenter >> updateExpressionValueDisplayed [
 
@@ -125,6 +139,7 @@ EvaluatorDebuggerPresenter >> updateExpressionValueDisplayed [
 EvaluatorDebuggerPresenter >> updatePresenter [
 
 	self updateCode.
-	self updateExpressionValueDisplayed.
+	self updateExpressionListContext. 
+	self updateExpressionValueDisplayed. 
 	super updatePresenter
 ]
